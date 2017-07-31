@@ -18,7 +18,6 @@
 """Kraken.com cryptocurrency Exchange API."""
 
 
-import json
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -102,7 +101,7 @@ class API(object):
         self.conn = conn
         return
 
-    def _query(self, urlpath, req, conn=None, headers=None):
+    def _query(self, urlpath, data, conn=None, headers=None):
         """ Low-level query handling.
 
         If a connection object is provided, attempts to use that
@@ -146,10 +145,9 @@ class API(object):
         if headers is None:
             headers = {}
 
-        ret = conn._request(url, req, headers)
-        return json.loads(ret)
+        return conn._request(url, data, headers)
 
-    def query_public(self, method, req=None, conn=None):
+    def query_public(self, method, data=None, conn=None):
         """ API queries that do not require a valid key/secret pair.
 
         :param method: API method name
@@ -163,12 +161,12 @@ class API(object):
         """
         urlpath = '/' + self.apiversion + '/public/' + method
 
-        if req is None:
-            req = {}
+        if data is None:
+            data = {}
 
-        return self._query(urlpath, req, conn)
+        return self._query(urlpath, data, conn)
 
-    def query_private(self, method, req=None, conn=None):
+    def query_private(self, method, data=None, conn=None):
         """ API queries that require a valid key/secret pair.
 
         :param method: API method name
@@ -181,17 +179,17 @@ class API(object):
 
         """
 
-        if req is None:
-            req = {}
+        if data is None:
+            data = {}
 
         # TODO: check if self.{key,secret} are set
         urlpath = '/' + self.apiversion + '/private/' + method
 
-        req['nonce'] = int(1000*time.time())
-        postdata = urllib.parse.urlencode(req)
+        data['nonce'] = int(1000*time.time())
+        postdata = urllib.parse.urlencode(data)
 
         # Unicode-objects must be encoded before hashing
-        encoded = (str(req['nonce']) + postdata).encode()
+        encoded = (str(data['nonce']) + postdata).encode()
         message = urlpath.encode() + hashlib.sha256(encoded).digest()
 
         signature = hmac.new(base64.b64decode(self.secret),
@@ -203,4 +201,4 @@ class API(object):
             'API-Sign': sigdigest.decode()
         }
 
-        return self._query(urlpath, req, conn, headers)
+        return self._query(urlpath, data, conn, headers)
