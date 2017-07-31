@@ -17,7 +17,6 @@
 
 """Kraken.com cryptocurrency Exchange API."""
 
-
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -134,7 +133,6 @@ class API(object):
         :returns: :py:func:`json.loads`-deserialised Python object
 
         """
-
         url = self.uri + urlpath
 
         if conn is None:
@@ -178,14 +176,27 @@ class API(object):
         :returns: :py:func:`json.loads`-deserialised Python object
 
         """
-
         if data is None:
             data = {}
+
+        # TODO: allow using a different scheme
+        data['nonce'] = int(1000*time.time())
 
         # TODO: check if self.{key,secret} are set
         urlpath = '/' + self.apiversion + '/private/' + method
 
-        data['nonce'] = int(1000*time.time())
+        headers = {
+            'API-Key': self.key,
+            'API-Sign': self._sign(data, urlpath)
+        }
+
+        return self._query(urlpath, data, conn, headers)
+
+    def _sign(self, data, urlpath):
+        """ TODO
+
+        TODO
+        """
         postdata = urllib.parse.urlencode(data)
 
         # Unicode-objects must be encoded before hashing
@@ -196,9 +207,4 @@ class API(object):
                              message, hashlib.sha512)
         sigdigest = base64.b64encode(signature.digest())
 
-        headers = {
-            'API-Key': self.key,
-            'API-Sign': sigdigest.decode()
-        }
-
-        return self._query(urlpath, data, conn, headers)
+        return sigdigest.decode()
