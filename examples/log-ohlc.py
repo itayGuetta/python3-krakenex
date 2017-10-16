@@ -37,7 +37,7 @@ while True:
     lineprint(now())
 
     before = now()
-    ret = k.query_public('OHLC', data = {'pair': pair, 'since': since})
+    ret = k.query_public('OHLC', {'pair': pair, 'since': since})
     after = now()
 
     # comment out to track the same "since"
